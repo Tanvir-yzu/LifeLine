@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Profile - LifeLine Blood Bank{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Profile Header -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div class="flex items-center space-x-6">
+            <div class="w-24 h-24 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
+                <i class="fas fa-user text-white text-3xl"></i>
+            </div>
+            <div class="flex-1">
+                <h1 class="text-3xl font-bold text-gray-800">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="text-gray-600">{{ user.email }}</p>
+                <div class="flex items-center space-x-4 mt-2">
+                    {% if user.blood_group %}
+                    <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <i class="fas fa-tint mr-1"></i>{{ user.blood_group }}
+                    </span>
+                    {% endif %}
+                    {% if user.is_donor %}
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <i class="fas fa-heart mr-1"></i>Donor
+                    </span>
+                    {% endif %}
+                    {% if user.is_email_verified %}
+                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <i class="fas fa-check-circle mr-1"></i>Verified
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <a href="{% url 'users:profile_edit' %}" class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-lg font-semibold hover:from-red-600 hover:to-pink-600 transition-all duration-200">
+                    <i class="fas fa-edit mr-2"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Personal Information -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-user-circle mr-2 text-red-500"></i>Personal Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
+                        <p class="text-gray-800">{{ user.full_name|default:'Not provided' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                        <p class="text-gray-800">{{ user.email }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Phone Number</label>
+                        <p class="text-gray-800">{{ user.phone_number|default:'Not provided' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Date of Birth</label>
+                        <p class="text-gray-800">{{ user.date_of_birth|default:'Not provided' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Gender</label>
+                        <p class="text-gray-800">{{ user.get_gender_display|default:'Not provided' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Age</label>
+                        <p class="text-gray-800">{% if user.get_age %}{{ user.get_age }} years{% else %}Not available{% endif %}</p>
+                    </div>
+                </div>
+                {% if user.address %}
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Address</label>
+                    <p class="text-gray-800">{{ user.address }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Medical Information -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-heartbeat mr-2 text-red-500"></i>Medical Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Blood Group</label>
+                        <p class="text-gray-800 font-semibold">{{ user.blood_group|default:'Not provided' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Weight</label>
+                        <p class="text-gray-800">{% if user.weight %}{{ user.weight }} kg{% else %}Not provided{% endif %}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Last Donation</label>
+                        <p class="text-gray-800">{{ user.last_donation_date|default:'Never donated' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Donation Eligibility</label>
+                        {% if user.is_eligible_donor %}
+                        <span class="text-green-600 font-medium">
+                            <i class="fas fa-check-circle mr-1"></i>Eligible
+                        </span>
+                        {% else %}
+                        <span class="text-red-600 font-medium">
+                            <i class="fas fa-times-circle mr-1"></i>Not Eligible
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if user.medical_conditions %}
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Medical Conditions</label>
+                    <p class="text-gray-800">{{ user.medical_conditions }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Emergency Contact -->
+            {% if user.profile %}
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-phone-alt mr-2 text-red-500"></i>Emergency Contact
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Contact Name</label>
+                        <p class="text-gray-800">{{ user.profile.emergency_contact_name|default:'Not provided' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Contact Phone</label>
+                        <p class="text-gray-800">{{ user.profile.emergency_contact_phone|default:'Not provided' }}</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Relationship</label>
+                        <p class="text-gray-800">{{ user.profile.emergency_contact_relation|default:'Not provided' }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Account Status -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Account Status</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Email Verified</span>
+                        {% if user.is_email_verified %}
+                        <span class="text-green-600"><i class="fas fa-check-circle"></i></span>
+                        {% else %}
+                        <span class="text-red-600"><i class="fas fa-times-circle"></i></span>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Donor Status</span>
+                        {% if user.is_donor %}
+                        <span class="text-green-600"><i class="fas fa-check-circle"></i></span>
+                        {% else %}
+                        <span class="text-gray-600"><i class="fas fa-times-circle"></i></span>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Available for Donation</span>
+                        {% if user.is_available_for_donation %}
+                        <span class="text-green-600"><i class="fas fa-check-circle"></i></span>
+                        {% else %}
+                        <span class="text-red-600"><i class="fas fa-times-circle"></i></span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            {% if user.profile %}
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Statistics</h3>
+                <div class="space-y-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-600">{{ user.profile.total_donations }}</div>
+                        <div class="text-sm text-gray-500">Total Donations</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ user.profile.total_requests_fulfilled }}</div>
+                        <div class="text-sm text-gray-500">Requests Fulfilled</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                <div class="space-y-3">
+                    <a href="{% url 'users:profile_edit' %}" class="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white py-2 px-4 rounded-lg font-medium hover:from-red-600 hover:to-pink-600 transition-all duration-200 flex items-center justify-center">
+                        <i class="fas fa-edit mr-2"></i>Edit Profile
+                    </a>
+                    {% comment %} <a href="{% url 'users:change_password' %}" class="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-all duration-200 flex items-center justify-center">
+                        <i class="fas fa-key mr-2"></i>Change Password
+                    </a> {% endcomment %}
+                    {% if not user.is_email_verified %}
+                    <a href="{% url 'users:resend_verification' %}" class="w-full bg-blue-100 text-blue-700 py-2 px-4 rounded-lg font-medium hover:bg-blue-200 transition-all duration-200 flex items-center justify-center">
+                        <i class="fas fa-envelope mr-2"></i>Verify Email
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

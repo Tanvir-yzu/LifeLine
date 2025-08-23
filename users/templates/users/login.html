@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LifeLine - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="//unpkg.com/alpinejs" defer></script>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/hFhKfKrf/icons8-blood-16.png">
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+
+  <div class="w-full max-w-md" x-data="{ showPassword: false }">
+    <!-- Logo + Header -->
+    <div class="text-center mb-6">
+      <a href="{% url 'home' %}" class="inline-flex items-center space-x-2 mb-4">
+        <svg class="h-8 w-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
+                   2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 
+                   14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 
+                   6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+        <span class="text-2xl font-bold text-gray-800">LifeLine</span>
+      </a>
+      <h1 class="text-2xl font-bold text-gray-900">Welcome Back</h1>
+      <p class="text-gray-500">Sign in to your account to continue</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-white rounded-2xl shadow p-6 border border-gray-200">
+      <h2 class="text-center text-lg font-semibold mb-4">Sign In</h2>
+
+      <!-- Display form errors -->
+      {% if form.non_field_errors %}
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          {% for error in form.non_field_errors %}
+            <p class="text-red-600 text-sm">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        
+        <!-- Email -->
+        <div class="space-y-2">
+          <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Email</label>
+          <div class="relative">
+            {{ form.email }}
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 12a4 4 0 01-8 0 4 4 0 018 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+            </svg>
+          </div>
+          {% if form.email.errors %}
+            {% for error in form.email.errors %}
+              <p class="text-red-600 text-sm">{{ error }}</p>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Password -->
+        <div class="space-y-2 relative">
+          <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700">Password</label>
+          <div class="relative">
+            <input
+              id="{{ form.password.id_for_label }}"
+              name="{{ form.password.name }}"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="••••••••"
+              required
+              class="pl-10 pr-10 py-2 w-full border rounded-lg focus:ring-2 focus:ring-red-400 focus:outline-none"
+            />
+            <!-- Lock Icon -->
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <!-- Show/Hide Password -->
+            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+              <template x-if="showPassword">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-.685.07-1.35.202-1.99m1.608-2.92A9.959 9.959 0 012 9c0 5.523 4.477 10 10 10 1.408 0 2.744-.29 3.955-.805m3.493-2.067A9.963 9.963 0 0022 9c0-5.523-4.477-10-10-10-1.408 0-2.744.29-3.955.805"/>
+                </svg>
+              </template>
+              <template x-if="!showPassword">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+              </template>
+            </button>
+          </div>
+          {% if form.password.errors %}
+            {% for error in form.password.errors %}
+              <p class="text-red-600 text-sm">{{ error }}</p>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Remember Me -->
+        <div class="flex items-center">
+          {{ form.remember_me }}
+          <label for="{{ form.remember_me.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+            {{ form.remember_me.label }}
+          </label>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-pink-500 text-white font-medium py-2 rounded-lg shadow hover:opacity-90">
+          Sign In
+        </button>
+
+        <!-- Forgot password -->
+        <div class="text-center">
+          <a href="{% url 'users:password_reset' %}" class="text-sm text-red-500 hover:underline">Forgot your password?</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-6">
+      <p class="text-gray-500">
+        Don't have an account?
+        <a href="{% url 'users:register' %}" class="text-red-500 hover:underline font-medium">Sign up as a donor</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

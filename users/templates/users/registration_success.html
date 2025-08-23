@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Successful - LifeLine Blood Bank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-red-50 to-pink-50 min-h-screen">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Success Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 text-center" x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)" x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
+                <!-- Success Icon -->
+                <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6">
+                    <i class="fas fa-check-circle text-3xl text-green-600"></i>
+                </div>
+                
+                <!-- Header -->
+                <div class="mb-6">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">
+                        Registration Successful!
+                    </h2>
+                    <p class="text-gray-600">
+                        Welcome to LifeLine Blood Bank
+                    </p>
+                </div>
+                
+                <!-- Success Message -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start">
+                        <i class="fas fa-envelope text-blue-500 mt-1 mr-3"></i>
+                        <div class="text-left">
+                            <h3 class="text-sm font-medium text-blue-800 mb-1">
+                                Check Your Email
+                            </h3>
+                            <p class="text-sm text-blue-700">
+                                We've sent a verification link to your email address. Please click the link to activate your account and start saving lives.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="space-y-4 mb-8">
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="flex-shrink-0 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">1</span>
+                        <span>Check your email inbox (and spam folder)</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="flex-shrink-0 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">2</span>
+                        <span>Click the verification link</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="flex-shrink-0 w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-bold mr-3">3</span>
+                        <span>Log in and start helping save lives</span>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="space-y-3">
+                    <a href="{% url 'users:login' %}" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Go to Login Page
+                    </a>
+                    
+                    <a href="{% url 'users:home' %}" class="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
+                        <i class="fas fa-home mr-2"></i>
+                        Back to Home
+                    </a>
+                </div>
+                
+                <!-- Help Text -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <p class="text-xs text-gray-500">
+                        Didn't receive the email? Check your spam folder or 
+                        <a href="{% url 'users:register' %}" class="text-red-600 hover:text-red-500 font-medium">
+                            try registering again
+                        </a>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Additional Info -->
+            <div class="text-center">
+                <p class="text-sm text-gray-600">
+                    Need help? 
+                    <a href="#" class="font-medium text-red-600 hover:text-red-500">
+                        Contact Support
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Auto-redirect script (optional) -->
+    <script>
+        // Optional: Auto-redirect to login page after 30 seconds
+        // setTimeout(() => {
+        //     window.location.href = "{% url 'users:login' %}";
+        // }, 30000);
+    </script>
+</body>
+</html>

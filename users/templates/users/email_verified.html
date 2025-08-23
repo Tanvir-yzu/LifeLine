@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verified - LifeLine Blood Bank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-red-50 to-pink-50 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full mx-4" x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)">
+        <div class="bg-white rounded-2xl shadow-xl p-8 text-center transform transition-all duration-500" 
+             :class="show ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'">
+            
+            <!-- Success Icon -->
+            <div class="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                <i class="fas fa-check-circle text-4xl text-green-500"></i>
+            </div>
+            
+            <!-- Title -->
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                Email Verified!
+            </h1>
+            
+            <!-- Success Message -->
+            <div class="mb-8">
+                <p class="text-gray-600 text-lg mb-4">
+                    Congratulations! Your email has been successfully verified.
+                </p>
+                <p class="text-gray-500">
+                    You can now access all features of LifeLine Blood Bank and start making a difference in saving lives.
+                </p>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="space-y-4">
+                <a href="{% url 'users:login' %}" 
+                   class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center group">
+                    <i class="fas fa-sign-in-alt mr-2 group-hover:translate-x-1 transition-transform duration-200"></i>
+                    Login to Your Account
+                </a>
+                
+                <a href="{% url 'home' %}" 
+                   class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center group">
+                    <i class="fas fa-home mr-2 group-hover:translate-x-1 transition-transform duration-200"></i>
+                    Go to Homepage
+                </a>
+            </div>
+            
+            <!-- Additional Info -->
+            <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                <div class="flex items-start space-x-3">
+                    <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                    <div class="text-left">
+                        <h3 class="font-semibold text-blue-800 mb-1">What's Next?</h3>
+                        <ul class="text-sm text-blue-700 space-y-1">
+                            <li>• Complete your profile information</li>
+                            <li>• Browse blood donation requests</li>
+                            <li>• Create your own blood requests if needed</li>
+                            <li>• Connect with other donors in your area</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <p class="text-sm text-gray-500">
+                    Thank you for joining LifeLine Blood Bank community!
+                </p>
+            </div>
+        </div>
+        
+        <!-- Floating Elements -->
+        <div class="absolute -top-4 -right-4 w-8 h-8 bg-red-200 rounded-full opacity-60 animate-pulse"></div>
+        <div class="absolute -bottom-4 -left-4 w-6 h-6 bg-pink-200 rounded-full opacity-60 animate-pulse" style="animation-delay: 1s;"></div>
+    </div>
+    
+    <!-- Background Decoration -->
+    <div class="fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-red-100 rounded-full opacity-20 animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-48 h-48 bg-pink-100 rounded-full opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+</body>
+</html>
