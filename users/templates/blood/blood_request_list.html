@@ -1,0 +1,485 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Blood Requests - LifeLine{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blood-request-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .blood-request-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+    .blood-type-badge {
+        font-weight: bold;
+        font-size: 1.1rem;
+        min-width: 60px;
+        text-align: center;
+    }
+    .urgency-high {
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+    .status-badge {
+        font-size: 0.875rem;
+        font-weight: 600;
+        min-width: 80px;
+        text-align: center;
+    }
+    .filter-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .loading-spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .filter-active {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 0.375rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8" x-data="bloodRequestList()">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Blood Requests</h1>
+            <p class="text-gray-600">Help save lives by responding to blood donation requests</p>
+        </div>
+        {% if user.is_authenticated %}
+        <div class="mt-4 md:mt-0">
+            <a href="{% url 'users:blood_request_create' %}" 
+               class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 inline-flex items-center transform hover:scale-105">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Blood Request
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Filter and Search Section -->
+    <div class="filter-section rounded-lg p-6 mb-8" x-data="{ filtersExpanded: true }">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Filter Blood Requests</h3>
+            <button @click="filtersExpanded = !filtersExpanded" 
+                    class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-5 h-5 transform transition-transform" 
+                     :class="{ 'rotate-180': !filtersExpanded }" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form method="GET" x-show="filtersExpanded" x-transition 
+              class="grid grid-cols-1 md:grid-cols-4 gap-4" 
+              @submit="loading = true">
+            <!-- Search -->
+            <div>
+                <label class="block text-sm font-medium mb-2">Search</label>
+                <input type="text" name="search" 
+                       x-model="filters.search"
+                       value="{{ request.GET.search }}" 
+                       placeholder="Search by location, hospital..." 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+            </div>
+            
+            <!-- Blood Group Filter -->
+            <div>
+                <label class="block text-sm font-medium mb-2">Blood Group</label>
+                <select name="blood_group" 
+                        x-model="filters.blood_group"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <option value="">All Blood Groups</option>
+                    <option value="A+" {% if request.GET.blood_group == 'A+' %}selected{% endif %}>A+</option>
+                    <option value="A-" {% if request.GET.blood_group == 'A-' %}selected{% endif %}>A-</option>
+                    <option value="B+" {% if request.GET.blood_group == 'B+' %}selected{% endif %}>B+</option>
+                    <option value="B-" {% if request.GET.blood_group == 'B-' %}selected{% endif %}>B-</option>
+                    <option value="AB+" {% if request.GET.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                    <option value="AB-" {% if request.GET.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
+                    <option value="O+" {% if request.GET.blood_group == 'O+' %}selected{% endif %}>O+</option>
+                    <option value="O-" {% if request.GET.blood_group == 'O-' %}selected{% endif %}>O-</option>
+                </select>
+            </div>
+            
+            <!-- Urgency Filter -->
+            <div>
+                <label class="block text-sm font-medium mb-2">Urgency</label>
+                <select name="urgency" 
+                        x-model="filters.urgency"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                    <option value="">All Urgency Levels</option>
+                    <option value="low" {% if request.GET.urgency == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if request.GET.urgency == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if request.GET.urgency == 'high' %}selected{% endif %}>High</option>
+                    <option value="critical" {% if request.GET.urgency == 'critical' %}selected{% endif %}>Critical</option>
+                </select>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex items-end space-x-2">
+                <button type="submit" 
+                        class="flex-1 bg-white text-purple-700 px-4 py-2 rounded-md font-semibold hover:bg-gray-100 transition duration-200 flex items-center justify-center"
+                        :disabled="loading">
+                    <span x-show="!loading">Apply Filters</span>
+                    <div x-show="loading" class="loading-spinner"></div>
+                </button>
+                <button type="button" 
+                        @click="clearFilters()"
+                        class="px-4 py-2 bg-transparent border border-white text-white rounded-md hover:bg-white hover:text-purple-700 transition duration-200">
+                    Clear
+                </button>
+            </div>
+        </form>
+        
+        <!-- Active Filters Display -->
+        <div x-show="hasActiveFilters()" class="mt-4 flex flex-wrap gap-2">
+            <span class="text-sm font-medium">Active filters:</span>
+            <template x-for="filter in getActiveFilters()" :key="filter.key">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20 text-white">
+                    <span x-text="filter.label + ': ' + filter.value"></span>
+                    <button @click="removeFilter(filter.key)" class="ml-1 text-white hover:text-gray-200">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </span>
+            </template>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transform hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl font-bold text-red-600 mb-2">{{ total_requests|default:0 }}</div>
+            <div class="text-gray-600">Total Requests</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transform hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ active_requests|default:0 }}</div>
+            <div class="text-gray-600">Active Requests</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transform hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl font-bold text-orange-600 mb-2">{{ urgent_requests|default:0 }}</div>
+            <div class="text-gray-600">Urgent Requests</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transform hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ fulfilled_requests|default:0 }}</div>
+            <div class="text-gray-600">Fulfilled Requests</div>
+        </div>
+    </div>
+
+    <!-- Blood Requests List -->
+    {% if blood_requests %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" x-data="{ viewMode: 'grid' }">
+            <!-- View Mode Toggle -->
+            <div class="col-span-full flex justify-end mb-4">
+                <div class="bg-white rounded-lg shadow-sm border p-1 flex">
+                    <button @click="viewMode = 'grid'" 
+                            :class="viewMode === 'grid' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:text-blue-500'"
+                            class="px-3 py-1 rounded transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                        </svg>
+                    </button>
+                    <button @click="viewMode = 'list'" 
+                            :class="viewMode === 'list' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:text-blue-500'"
+                            class="px-3 py-1 rounded transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            {% for blood_request in blood_requests %}
+            <div class="blood-request-card bg-white rounded-lg shadow-md overflow-hidden fade-in
+                        {% if blood_request.urgency == 'high' or blood_request.urgency == 'critical' %}urgency-high{% endif %}"
+                 :class="viewMode === 'list' ? 'col-span-full' : ''"
+                 x-data="{ expanded: false }">
+                
+                <!-- Card Header -->
+                <div class="p-6 pb-4" :class="viewMode === 'list' ? 'flex items-start space-x-6' : ''">
+                    <div :class="viewMode === 'list' ? 'flex-shrink-0' : ''">
+                        <div class="flex justify-between items-start mb-4" :class="viewMode === 'list' ? 'flex-col space-y-2' : ''">
+                            <div class="flex items-center space-x-3" :class="viewMode === 'list' ? 'flex-col space-y-1 space-x-0' : ''">
+                                <div class="blood-type-badge bg-red-100 text-red-800 px-3 py-1 rounded-full">
+                                    {{ blood_request.blood_group }}
+                                </div>
+                                <div class="status-badge 
+                                    {% if blood_request.status == 'active' %}bg-green-100 text-green-800
+                                    {% elif blood_request.status == 'fulfilled' %}bg-blue-100 text-blue-800
+                                    {% elif blood_request.status == 'cancelled' %}bg-gray-100 text-gray-800
+                                    {% elif blood_request.status == 'expired' %}bg-red-100 text-red-800
+                                    {% endif %} px-2 py-1 rounded-full">
+                                    {{ blood_request.get_status_display }}
+                                </div>
+                            </div>
+                            <div class="urgency-badge 
+                                {% if blood_request.urgency == 'critical' %}bg-red-500 text-white
+                                {% elif blood_request.urgency == 'high' %}bg-orange-500 text-white
+                                {% elif blood_request.urgency == 'medium' %}bg-yellow-500 text-white
+                                {% else %}bg-green-500 text-white
+                                {% endif %} px-2 py-1 rounded text-xs font-semibold">
+                                {{ blood_request.get_urgency_display }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div :class="viewMode === 'list' ? 'flex-1' : ''">
+                        <!-- Patient Info -->
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ blood_request.patient_name }}</h3>
+                        <p class="text-gray-600 text-sm mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            {{ blood_request.hospital_name }}, {{ blood_request.location }}
+                        </p>
+                        
+                        <!-- Units Needed -->
+                        <div class="flex items-center text-sm text-gray-600 mb-3">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            {{ blood_request.units_needed }} unit{{ blood_request.units_needed|pluralize }} needed
+                        </div>
+                        
+                        <!-- Date Info -->
+                        <div class="text-xs text-gray-500 mb-4">
+                            <div>Needed by: {{ blood_request.needed_by|date:"M d, Y" }}</div>
+                            <div>Posted: {{ blood_request.created_at|timesince }} ago</div>
+                        </div>
+                        
+                        <!-- Description -->
+                        {% if blood_request.description %}
+                        <div class="mb-4">
+                            <p class="text-gray-700 text-sm" 
+                               :class="expanded ? '' : 'line-clamp-2'"
+                               x-text="expanded ? '{{ blood_request.description|escapejs }}' : '{{ blood_request.description|truncatewords:15|escapejs }}'">
+                            </p>
+                            {% if blood_request.description|length > 100 %}
+                            <button @click="expanded = !expanded" 
+                                    class="text-blue-600 hover:text-blue-800 text-xs mt-1 transition-colors"
+                                    x-text="expanded ? 'Show less' : 'Show more'">
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Card Footer -->
+                <div class="px-6 pb-6" :class="viewMode === 'list' ? 'flex justify-end' : ''">
+                    <div class="flex space-x-2" :class="viewMode === 'list' ? 'w-auto' : 'w-full'">
+                        <a href="{% url 'users:blood_request_detail' blood_request.pk %}" 
+                           class="bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-md text-sm font-medium transition duration-200 transform hover:scale-105"
+                           :class="viewMode === 'list' ? 'flex-shrink-0' : 'flex-1'">
+                            View Details
+                        </a>
+                        {% if user.is_authenticated and blood_request.status == 'active' %}
+                            <!-- Fixed: Removed the incorrect :user syntax -->
+                            <a href="{% url 'users:blood_request_detail' blood_request.pk %}" 
+                               class="bg-red-600 hover:bg-red-700 text-white text-center py-2 px-4 rounded-md text-sm font-medium transition duration-200 transform hover:scale-105"
+                               :class="viewMode === 'list' ? 'flex-shrink-0' : 'flex-1'">
+                                Respond
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Expiry Warning -->
+                {% if blood_request.is_expiring_soon %}
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+                    <div class="flex">
+                        <svg class="w-4 h-4 text-yellow-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <p class="text-sm text-yellow-700">Expires soon - {{ blood_request.needed_by|timeuntil }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex items-center space-x-2">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.blood_group %}&blood_group={{ request.GET.blood_group }}{% endif %}{% if request.GET.urgency %}&urgency={{ request.GET.urgency }}{% endif %}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                        First
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.blood_group %}&blood_group={{ request.GET.blood_group }}{% endif %}{% if request.GET.urgency %}&urgency={{ request.GET.urgency }}{% endif %}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                        Previous
+                    </a>
+                {% endif %}
+                
+                <span class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.blood_group %}&blood_group={{ request.GET.blood_group }}{% endif %}{% if request.GET.urgency %}&urgency={{ request.GET.urgency }}{% endif %}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                        Next
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.blood_group %}&blood_group={{ request.GET.blood_group }}{% endif %}{% if request.GET.urgency %}&urgency={{ request.GET.urgency }}{% endif %}" 
+                       class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                        Last
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+        
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12 fade-in">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No blood requests found</h3>
+            <p class="text-gray-500 mb-6">
+                {% if request.GET.search or request.GET.blood_group or request.GET.urgency %}
+                    Try adjusting your filters or
+                {% else %}
+                    Be the first to
+                {% endif %} 
+                create a blood request.
+            </p>
+            {% if user.is_authenticated %}
+            <a href="{% url 'users:blood_request_create' %}" 
+               class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 inline-flex items-center transform hover:scale-105">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Blood Request
+            </a>
+            {% else %}
+            <a href="{% url 'users:login' %}" 
+               class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200 transform hover:scale-105">
+                Login to Create Request
+            </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Auto-refresh notification -->
+<div x-data="{ showRefreshNotification: false }" 
+     x-init="
+        {% if active_requests %}
+        setTimeout(() => {
+            showRefreshNotification = true;
+            setTimeout(() => {
+                location.reload();
+            }, 5000);
+        }, 295000);
+        {% endif %}
+     "
+     x-show="showRefreshNotification"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 transform translate-y-2"
+     x-transition:enter-end="opacity-100 transform translate-y-0"
+     class="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+    <div class="flex items-center space-x-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        <span>Refreshing in 5 seconds...</span>
+        <button @click="showRefreshNotification = false" class="text-white hover:text-gray-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+function bloodRequestList() {
+    return {
+        loading: false,
+        filters: {
+            search: '{{ request.GET.search|default:"" }}',
+            blood_group: '{{ request.GET.blood_group|default:"" }}',
+            urgency: '{{ request.GET.urgency|default:"" }}'
+        },
+        
+        hasActiveFilters() {
+            return this.filters.search || this.filters.blood_group || this.filters.urgency;
+        },
+        
+        getActiveFilters() {
+            const active = [];
+            if (this.filters.search) {
+                active.push({ key: 'search', label: 'Search', value: this.filters.search });
+            }
+            if (this.filters.blood_group) {
+                active.push({ key: 'blood_group', label: 'Blood Group', value: this.filters.blood_group });
+            }
+            if (this.filters.urgency) {
+                active.push({ key: 'urgency', label: 'Urgency', value: this.filters.urgency });
+            }
+            return active;
+        },
+        
+        removeFilter(key) {
+            this.filters[key] = '';
+            this.applyFilters();
+        },
+        
+        clearFilters() {
+            this.filters = {
+                search: '',
+                blood_group: '',
+                urgency: ''
+            };
+            this.applyFilters();
+        },
+        
+        applyFilters() {
+            const params = new URLSearchParams();
+            if (this.filters.search) params.set('search', this.filters.search);
+            if (this.filters.blood_group) params.set('blood_group', this.filters.blood_group);
+            if (this.filters.urgency) params.set('urgency', this.filters.urgency);
+            
+            const url = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.location.href = url;
+        }
+    }
+}
+</script>
+{% endblock %}

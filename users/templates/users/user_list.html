@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Users List - LifeLine Blood Bank{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" x-data="{
+    showFilters: false,
+    viewMode: 'grid',
+    selectedBloodGroup: '{{ current_filters.blood_group }}',
+    selectedLocation: '{{ current_filters.location }}',
+    searchQuery: '{{ current_filters.search }}'
+}">
+    <!-- Header -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Blood Donors</h1>
+                <p class="text-gray-600 mt-1">Find and connect with blood donors in your area</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'users:register' %}" class="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-lg font-semibold hover:from-red-600 hover:to-pink-600 transition-all duration-200">
+                    <i class="fas fa-user-plus mr-2"></i>Join as Donor
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <form method="GET" class="space-y-4">
+            <!-- Search Bar -->
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="text" 
+                       name="search" 
+                       x-model="searchQuery"
+                       value="{{ current_filters.search }}"
+                       placeholder="Search by name, location, or blood group..."
+                       class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </div>
+
+            <!-- Filter Toggle -->
+            <div class="flex items-center justify-between">
+                <button type="button" 
+                        @click="showFilters = !showFilters"
+                        class="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
+                    <i class="fas fa-filter"></i>
+                    <span>Advanced Filters</span>
+                    <i class="fas fa-chevron-down transition-transform" :class="showFilters ? 'rotate-180' : ''"></i>
+                </button>
+                
+                <!-- View Mode Toggle -->
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">View:</span>
+                    <div class="bg-gray-100 rounded-lg p-1 flex">
+                        <button type="button" 
+                                @click="viewMode = 'grid'"
+                                :class="viewMode === 'grid' ? 'bg-white shadow-sm' : ''"
+                                class="px-3 py-1 rounded transition-all">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button type="button" 
+                                @click="viewMode = 'list'"
+                                :class="viewMode === 'list' ? 'bg-white shadow-sm' : ''"
+                                class="px-3 py-1 rounded transition-all">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div x-show="showFilters" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95"
+                 class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                
+                <!-- Blood Group Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Blood Group</label>
+                    <select name="blood_group" 
+                            x-model="selectedBloodGroup"
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        <option value="">All Blood Groups</option>
+                        {% for value, label in blood_groups %}
+                            <option value="{{ value }}" {% if current_filters.blood_group == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Location Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <input type="text" 
+                           name="location" 
+                           x-model="selectedLocation"
+                           value="{{ current_filters.location }}"
+                           placeholder="Enter city or area"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                </div>
+
+                <!-- Availability Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                    <select name="availability" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        <option value="">All Donors</option>
+                        <option value="available" {% if current_filters.availability == 'available' %}selected{% endif %}>Available to Donate</option>
+                        <option value="verified" {% if current_filters.availability == 'verified' %}selected{% endif %}>Verified Donors Only</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filter Actions -->
+            <div class="flex items-center space-x-3 pt-4">
+                <button type="submit" 
+                        class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                    <i class="fas fa-search mr-2"></i>Search
+                </button>
+                <a href="{% url 'users:user_list' %}" 
+                   class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Clear Filters
+                </a>
+            </div>
+
+            <!-- Active Filters Display -->
+            {% if current_filters.blood_group or current_filters.location or current_filters.search or current_filters.availability %}
+            <div class="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
+                <span class="text-sm text-gray-600">Active filters:</span>
+                {% if current_filters.blood_group %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Blood Group: {{ current_filters.blood_group }}
+                        <a href="?{% if current_filters.search %}search={{ current_filters.search }}&{% endif %}{% if current_filters.location %}location={{ current_filters.location }}&{% endif %}{% if current_filters.availability %}availability={{ current_filters.availability }}{% endif %}" class="ml-2 text-red-600 hover:text-red-800">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if current_filters.location %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Location: {{ current_filters.location }}
+                        <a href="?{% if current_filters.search %}search={{ current_filters.search }}&{% endif %}{% if current_filters.blood_group %}blood_group={{ current_filters.blood_group }}&{% endif %}{% if current_filters.availability %}availability={{ current_filters.availability }}{% endif %}" class="ml-2 text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                {% endif %}
+                {% if current_filters.availability %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {{ current_filters.availability|title }}
+                        <a href="?{% if current_filters.search %}search={{ current_filters.search }}&{% endif %}{% if current_filters.blood_group %}blood_group={{ current_filters.blood_group }}&{% endif %}{% if current_filters.location %}location={{ current_filters.location }}{% endif %}" class="ml-2 text-green-600 hover:text-green-800">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transform hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl font-bold text-red-600 mb-2">{{ total_users|default:0 }}</div>
+            <div class="text-gray-600">Total Donors</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transform hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ available_donors|default:0 }}</div>
+            <div class="text-gray-600">Available Donors</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transform hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ verified_donors|default:0 }}</div>
+            <div class="text-gray-600">Verified Donors</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 text-center transform hover:scale-105 transition-transform duration-200">
+            <div class="text-3xl font-bold text-orange-600 mb-2">{{ recent_donations|default:0 }}</div>
+            <div class="text-gray-600">Recent Donations</div>
+        </div>
+    </div>
+
+    <!-- Users List -->
+    {% if users %}
+        <div class="grid gap-6" :class="viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'">
+            {% for user in users %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
+                 :class="viewMode === 'list' ? 'flex' : ''">
+                
+                <!-- User Avatar -->
+                <div class="flex-shrink-0" :class="viewMode === 'list' ? 'w-24 h-24' : 'h-32'">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" 
+                             alt="{{ user.get_full_name }}"
+                             class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center">
+                            <span class="text-white text-2xl font-bold">
+                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- User Info -->
+                <div class="p-6 flex-1">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">
+                                {{ user.get_full_name|default:user.username }}
+                            </h3>
+                            <p class="text-sm text-gray-600">{{ user.email }}</p>
+                        </div>
+                        
+                        <!-- Blood Group Badge -->
+                        <div class="flex flex-col items-end space-y-1">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-tint mr-1"></i>{{ user.blood_group }}
+                            </span>
+                            
+                            <!-- Verification Badge -->
+                            {% if user.is_email_verified %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>Verified
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- User Details -->
+                    <div class="space-y-2 mb-4">
+                        {% if user.phone %}
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-phone w-4 mr-2"></i>
+                                <span>{{ user.phone }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if user.location %}
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-map-marker-alt w-4 mr-2"></i>
+                                <span>{{ user.location }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if user.date_of_birth %}
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-birthday-cake w-4 mr-2"></i>
+                                <span>{{ user.age }} years old</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Donation Status -->
+                    <div class="mb-4">
+                        {% if user.can_donate %}
+                            <div class="flex items-center text-sm text-green-600">
+                                <i class="fas fa-heart w-4 mr-2"></i>
+                                <span>Available to donate</span>
+                            </div>
+                        {% else %}
+                            <div class="flex items-center text-sm text-orange-600">
+                                <i class="fas fa-clock w-4 mr-2"></i>
+                                <span>Recently donated</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-2">
+                        <a href="{% url 'users:user_profile' user.pk %}" 
+                           class="flex-1 bg-red-600 text-white text-center py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                            <i class="fas fa-user mr-2"></i>View Profile
+                        </a>
+                        
+                        {% if user.can_donate and user != request.user %}
+                            <button class="bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                                    onclick="contactDonor('{{ user.phone }}', '{{ user.get_full_name }}')">
+                                <i class="fas fa-phone"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <div class="mt-8 flex justify-center">
+                <nav class="flex items-center space-x-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.blood_group %}&blood_group={{ current_filters.blood_group }}{% endif %}{% if current_filters.location %}&location={{ current_filters.location }}{% endif %}{% if current_filters.availability %}&availability={{ current_filters.availability }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">
+                            First
+                        </a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.blood_group %}&blood_group={{ current_filters.blood_group }}{% endif %}{% if current_filters.location %}&location={{ current_filters.location }}{% endif %}{% if current_filters.availability %}&availability={{ current_filters.availability }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+
+                    <span class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.blood_group %}&blood_group={{ current_filters.blood_group }}{% endif %}{% if current_filters.location %}&location={{ current_filters.location }}{% endif %}{% if current_filters.availability %}&availability={{ current_filters.availability }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 hover:bg-gray-50">
+                            Next
+                        </a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if current_filters.search %}&search={{ current_filters.search }}{% endif %}{% if current_filters.blood_group %}&blood_group={{ current_filters.blood_group }}{% endif %}{% if current_filters.location %}&location={{ current_filters.location }}{% endif %}{% if current_filters.availability %}&availability={{ current_filters.availability }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50">
+                            Last
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+                <i class="fas fa-users text-6xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No donors found</h3>
+            <p class="text-gray-500 mb-6">Try adjusting your search criteria or filters.</p>
+            <a href="{% url 'users:user_list' %}" 
+               class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                Clear All Filters
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Contact Donor Modal -->
+<div id="contactModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Contact Donor</h3>
+        <p class="text-gray-600 mb-4">You can contact <span id="donorName"></span> at:</p>
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <div class="flex items-center justify-between">
+                <span id="donorPhone" class="font-mono text-lg"></span>
+                <button onclick="copyPhone()" class="text-red-600 hover:text-red-700">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="callDonor()" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                <i class="fas fa-phone mr-2"></i>Call Now
+            </button>
+            <button onclick="closeContactModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-400 transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDonorPhone = '';
+
+function contactDonor(phone, name) {
+    currentDonorPhone = phone;
+    document.getElementById('donorName').textContent = name;
+    document.getElementById('donorPhone').textContent = phone;
+    document.getElementById('contactModal').classList.remove('hidden');
+    document.getElementById('contactModal').classList.add('flex');
+}
+
+function closeContactModal() {
+    document.getElementById('contactModal').classList.add('hidden');
+    document.getElementById('contactModal').classList.remove('flex');
+}
+
+function copyPhone() {
+    navigator.clipboard.writeText(currentDonorPhone).then(() => {
+        // Show a brief success message
+        const button = event.target.closest('button');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        button.classList.add('text-green-600');
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('text-green-600');
+        }, 1000);
+    });
+}
+
+function callDonor() {
+    window.location.href = `tel:${currentDonorPhone}`;
+}
+
+// Close modal when clicking outside
+document.getElementById('contactModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeContactModal();
+    }
+});
+</script>
+{% endblock %}

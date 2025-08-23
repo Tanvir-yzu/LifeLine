@@ -238,7 +238,7 @@ class BloodRequestCreateView(LoginRequiredMixin, CreateView):
     """Create blood request view"""
     model = BloodRequest
     form_class = BloodRequestForm
-    template_name = 'users/blood_request_create.html'
+    template_name = 'blood/blood_request_create.html'
     login_url = reverse_lazy('users:login')
     
     def form_valid(self, form):
@@ -253,7 +253,7 @@ class BloodRequestCreateView(LoginRequiredMixin, CreateView):
 class BloodRequestDetailView(DetailView):
     """Blood request detail view"""
     model = BloodRequest
-    template_name = 'users/blood_request_detail.html'
+    template_name = 'blood/blood_request_detail.html'
     context_object_name = 'blood_request'
     
     def get_context_data(self, **kwargs):
@@ -284,7 +284,7 @@ class BloodRequestUpdateView(LoginRequiredMixin, UpdateView):
     """Update blood request view"""
     model = BloodRequest
     form_class = BloodRequestForm
-    template_name = 'users/blood_request_edit.html'
+    template_name = 'blood/blood_request_edit.html'
     login_url = reverse_lazy('users:login')
     
     def get_queryset(self):
@@ -301,7 +301,7 @@ class BloodRequestUpdateView(LoginRequiredMixin, UpdateView):
 class BloodRequestDeleteView(LoginRequiredMixin, DeleteView):
     """Delete blood request view"""
     model = BloodRequest
-    template_name = 'users/blood_request_delete.html'
+    template_name = 'blood/blood_request_delete.html'
     success_url = reverse_lazy('users:dashboard')
     login_url = reverse_lazy('users:login')
     
@@ -316,7 +316,7 @@ class BloodRequestDeleteView(LoginRequiredMixin, DeleteView):
 class BloodRequestListView(ListView):
     """List all public blood requests"""
     model = BloodRequest
-    template_name = 'users/blood_request_list.html'
+    template_name = 'blood/blood_request_list.html'
     context_object_name = 'blood_requests'
     paginate_by = 12
     
@@ -356,6 +356,28 @@ class BloodRequestListView(ListView):
             'urgency': self.request.GET.get('urgency', ''),
             'search': self.request.GET.get('search', ''),
         }
+        
+        # Add statistics for the dashboard
+        context['total_requests'] = BloodRequest.objects.filter(is_public=True).count()
+        context['active_requests'] = BloodRequest.objects.filter(status='ACTIVE', is_public=True).count()
+        context['urgent_requests'] = BloodRequest.objects.filter(
+            status='ACTIVE', 
+            is_public=True, 
+            urgency__in=['HIGH', 'CRITICAL']
+        ).count()
+        context['fulfilled_requests'] = BloodRequest.objects.filter(status='FULFILLED', is_public=True).count()
+        
+        return context
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['blood_groups'] = User.BLOOD_GROUP_CHOICES
+        context['urgency_levels'] = BloodRequest.URGENCY_CHOICES
+        context['current_filters'] = {
+            'blood_group': self.request.GET.get('blood_group', ''),
+            'urgency': self.request.GET.get('urgency', ''),
+            'search': self.request.GET.get('search', ''),
+        }
         return context
 
 
@@ -363,7 +385,7 @@ class BloodRequestResponseCreateView(LoginRequiredMixin, CreateView):
     """Respond to blood request view"""
     model = BloodRequestResponse
     form_class = BloodRequestResponseForm
-    template_name = 'users/blood_request_respond.html'
+    template_name = 'blood/blood_request_respond.html'
     login_url = reverse_lazy('users:login')
     
     def dispatch(self, request, *args, **kwargs):
@@ -406,7 +428,7 @@ class BloodRequestResponseCreateView(LoginRequiredMixin, CreateView):
 class MyBloodRequestsView(LoginRequiredMixin, ListView):
     """User's blood requests view"""
     model = BloodRequest
-    template_name = 'users/my_blood_requests.html'
+    template_name = 'blood/my_blood_requests.html'
     context_object_name = 'blood_requests'
     paginate_by = 10
     login_url = reverse_lazy('users:login')
@@ -420,7 +442,7 @@ class MyBloodRequestsView(LoginRequiredMixin, ListView):
 class MyResponsesView(LoginRequiredMixin, ListView):
     """User's blood request responses view"""
     model = BloodRequestResponse
-    template_name = 'users/my_responses.html'
+    template_name = 'blood/my_responses.html'
     context_object_name = 'responses'
     paginate_by = 10
     login_url = reverse_lazy('users:login')
@@ -434,7 +456,7 @@ class MyResponsesView(LoginRequiredMixin, ListView):
 class DonorSearchView(ListView):
     """Search for donors view"""
     model = User
-    template_name = 'users/donor_search.html'
+    template_name = 'blood/donor_search.html'
     context_object_name = 'donors'
     paginate_by = 12
     

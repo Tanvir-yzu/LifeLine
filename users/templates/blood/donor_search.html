@@ -1,0 +1,640 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Find Blood Donors - LifeLine{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div x-data="donorSearch()" class="min-h-screen bg-gray-50">
+    <!-- Hero Search Section -->
+    <div class="bg-gradient-to-r from-red-600 to-red-800 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold mb-4">Find Blood Donors</h1>
+                <p class="text-xl text-red-100">Connect with life-saving donors in your area</p>
+            </div>
+            
+            <!-- Quick Search Form -->
+            <form method="GET" class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Blood Group</label>
+                            <select name="blood_group" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                                <option value="">All Blood Groups</option>
+                                <option value="A+" {% if request.GET.blood_group == 'A+' %}selected{% endif %}>A+</option>
+                                <option value="A-" {% if request.GET.blood_group == 'A-' %}selected{% endif %}>A-</option>
+                                <option value="B+" {% if request.GET.blood_group == 'B+' %}selected{% endif %}>B+</option>
+                                <option value="B-" {% if request.GET.blood_group == 'B-' %}selected{% endif %}>B-</option>
+                                <option value="AB+" {% if request.GET.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                                <option value="AB-" {% if request.GET.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
+                                <option value="O+" {% if request.GET.blood_group == 'O+' %}selected{% endif %}>O+</option>
+                                <option value="O-" {% if request.GET.blood_group == 'O-' %}selected{% endif %}>O-</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                            <input type="text" name="location" value="{{ request.GET.location }}" 
+                                   placeholder="City or Area" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                            <select name="availability" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                                <option value="">All Donors</option>
+                                <option value="available" {% if request.GET.availability == 'available' %}selected{% endif %}>Available Now</option>
+                                <option value="recent" {% if request.GET.availability == 'recent' %}selected{% endif %}>Recently Donated</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-200">
+                                <i class="fas fa-search mr-2"></i>Search Donors
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistics Dashboard -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-red-100 text-red-600">
+                        <i class="fas fa-users text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Donors</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ total_donors|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-heart text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Available Donors</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ available_donors|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-tint text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Blood Groups</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ blood_groups_count|default:8 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Recent Donations</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ recent_donations|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and View Controls -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="p-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div class="flex flex-wrap items-center space-x-4 mb-4 lg:mb-0">
+                        <!-- Advanced Filters Toggle -->
+                        <button @click="showAdvancedFilters = !showAdvancedFilters" 
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <i class="fas fa-filter mr-2"></i>
+                            Advanced Filters
+                            <i class="fas fa-chevron-down ml-2" :class="{'rotate-180': showAdvancedFilters}"></i>
+                        </button>
+                        
+                        <!-- Auto Refresh Toggle -->
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" x-model="autoRefresh" class="rounded border-gray-300 text-red-600 shadow-sm focus:border-red-300 focus:ring focus:ring-red-200 focus:ring-opacity-50">
+                            <span class="ml-2 text-sm text-gray-600">Auto-refresh (30s)</span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- View Mode Toggle -->
+                        <div class="flex rounded-md shadow-sm">
+                            <button @click="viewMode = 'grid'" 
+                                    :class="viewMode === 'grid' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'" 
+                                    class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-l-md">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button @click="viewMode = 'list'" 
+                                    :class="viewMode === 'list' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'" 
+                                    class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-r-md border-l-0">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Sort Options -->
+                        <select x-model="sortBy" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                            <option value="name">Sort by Name</option>
+                            <option value="location">Sort by Location</option>
+                            <option value="blood_group">Sort by Blood Group</option>
+                            <option value="last_donation">Sort by Last Donation</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Advanced Filters Panel -->
+                <div x-show="showAdvancedFilters" x-transition class="mt-6 pt-6 border-t border-gray-200">
+                    <form method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Age Range</label>
+                            <select name="age_range" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                                <option value="">All Ages</option>
+                                <option value="18-25" {% if request.GET.age_range == '18-25' %}selected{% endif %}>18-25</option>
+                                <option value="26-35" {% if request.GET.age_range == '26-35' %}selected{% endif %}>26-35</option>
+                                <option value="36-45" {% if request.GET.age_range == '36-45' %}selected{% endif %}>36-45</option>
+                                <option value="46-60" {% if request.GET.age_range == '46-60' %}selected{% endif %}>46-60</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                            <select name="gender" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                                <option value="">All Genders</option>
+                                <option value="M" {% if request.GET.gender == 'M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if request.GET.gender == 'F' %}selected{% endif %}>Female</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Distance</label>
+                            <select name="distance" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                                <option value="">Any Distance</option>
+                                <option value="5" {% if request.GET.distance == '5' %}selected{% endif %}>Within 5km</option>
+                                <option value="10" {% if request.GET.distance == '10' %}selected{% endif %}>Within 10km</option>
+                                <option value="25" {% if request.GET.distance == '25' %}selected{% endif %}>Within 25km</option>
+                                <option value="50" {% if request.GET.distance == '50' %}selected{% endif %}>Within 50km</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Verification</label>
+                            <select name="verified" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                                <option value="">All Donors</option>
+                                <option value="true" {% if request.GET.verified == 'true' %}selected{% endif %}>Verified Only</option>
+                                <option value="false" {% if request.GET.verified == 'false' %}selected{% endif %}>Unverified</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200 text-sm">
+                                Apply Filters
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-end">
+                            <a href="{% url 'users:find_donors' %}" class="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200 text-sm text-center">
+                                Clear All Filters
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Filters Display -->
+        {% if request.GET.blood_group or request.GET.location or request.GET.availability or request.GET.age_range or request.GET.gender or request.GET.distance or request.GET.verified %}
+        <div class="mb-6">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm font-medium text-gray-700">Active Filters:</span>
+                
+                {% if request.GET.blood_group %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Blood Group: {{ request.GET.blood_group }}
+                    <a href="?{% for key, value in request.GET.items %}{% if key != 'blood_group' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="ml-2 text-red-600 hover:text-red-800">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </span>
+                {% endif %}
+                
+                {% if request.GET.location %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Location: {{ request.GET.location }}
+                    <a href="?{% for key, value in request.GET.items %}{% if key != 'location' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="ml-2 text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </span>
+                {% endif %}
+                
+                {% if request.GET.availability %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Availability: {{ request.GET.availability|title }}
+                    <a href="?{% for key, value in request.GET.items %}{% if key != 'availability' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="ml-2 text-green-600 hover:text-green-800">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </span>
+                {% endif %}
+                
+                <a href="{% url 'users:find_donors' %}" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200">
+                    Clear All
+                    <i class="fas fa-times ml-1"></i>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Results Count -->
+        <div class="mb-6">
+            <p class="text-sm text-gray-600">
+                {% if donors %}
+                    Showing {{ donors|length }} of {{ total_donors }} donor{{ total_donors|pluralize }}
+                {% else %}
+                    No donors found matching your criteria
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Donors Grid/List -->
+        {% if donors %}
+        <div :class="viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'">
+            {% for donor in donors %}
+            <div :class="viewMode === 'grid' ? 'bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200' : 'bg-white rounded-lg shadow-md p-6 flex items-center space-x-6 hover:shadow-lg transition-shadow duration-200'">
+                <!-- Grid View -->
+                <div x-show="viewMode === 'grid'" class="p-6">
+                    <!-- Donor Avatar -->
+                    <div class="flex items-center mb-4">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                            {% if donor.profile_picture %}
+                                <img src="{{ donor.profile_picture.url }}" alt="{{ donor.get_full_name }}" class="w-16 h-16 rounded-full object-cover">
+                            {% else %}
+                                <i class="fas fa-user text-2xl text-red-600"></i>
+                            {% endif %}
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900">{{ donor.get_full_name }}</h3>
+                            <p class="text-sm text-gray-600">{{ donor.location|default:"Location not specified" }}</p>
+                        </div>
+                        {% if donor.is_verified %}
+                        <div class="text-green-500">
+                            <i class="fas fa-check-circle" title="Verified Donor"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Blood Group Badge -->
+                    <div class="mb-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            <i class="fas fa-tint mr-2"></i>{{ donor.blood_group }}
+                        </span>
+                    </div>
+                    
+                    <!-- Donor Info -->
+                    <div class="space-y-2 mb-4">
+                        {% if donor.age %}
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-birthday-cake w-4 mr-2"></i>
+                            <span>{{ donor.age }} years old</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if donor.gender %}
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-venus-mars w-4 mr-2"></i>
+                            <span>{{ donor.get_gender_display }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if donor.last_donation_date %}
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-calendar w-4 mr-2"></i>
+                            <span>Last donated: {{ donor.last_donation_date|date:"M d, Y" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Status Badges -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        {% if donor.can_donate %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check mr-1"></i>Available
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                <i class="fas fa-clock mr-1"></i>Recently Donated
+                            </span>
+                        {% endif %}
+                        
+                        {% if donor.total_donations %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="fas fa-award mr-1"></i>{{ donor.total_donations }} donation{{ donor.total_donations|pluralize }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-2">
+                        <a href="{% url 'users:profile_detail' donor.pk %}" 
+                           class="flex-1 bg-red-600 text-white text-center py-2 px-4 rounded-md hover:bg-red-700 transition duration-200 text-sm">
+                            <i class="fas fa-user mr-1"></i>View Profile
+                        </a>
+                        
+                        {% if donor.can_donate and request.user.is_authenticated %}
+                        <button @click="openContactModal({{ donor.pk }}, '{{ donor.get_full_name }}', '{{ donor.phone_number }}', '{{ donor.email }}')" 
+                                class="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200 text-sm">
+                            <i class="fas fa-phone mr-1"></i>Contact
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- List View -->
+                <div x-show="viewMode === 'list'" class="flex items-center w-full">
+                    <!-- Avatar -->
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        {% if donor.profile_picture %}
+                            <img src="{{ donor.profile_picture.url }}" alt="{{ donor.get_full_name }}" class="w-16 h-16 rounded-full object-cover">
+                        {% else %}
+                            <i class="fas fa-user text-2xl text-red-600"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Donor Info -->
+                    <div class="flex-1 ml-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                    {{ donor.get_full_name }}
+                                    {% if donor.is_verified %}
+                                    <i class="fas fa-check-circle text-green-500 ml-2" title="Verified Donor"></i>
+                                    {% endif %}
+                                </h3>
+                                <p class="text-sm text-gray-600">{{ donor.location|default:"Location not specified" }}</p>
+                            </div>
+                            
+                            <div class="text-right">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                    <i class="fas fa-tint mr-2"></i>{{ donor.blood_group }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-2 flex items-center justify-between">
+                            <div class="flex flex-wrap gap-2">
+                                {% if donor.can_donate %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check mr-1"></i>Available
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                        <i class="fas fa-clock mr-1"></i>Recently Donated
+                                    </span>
+                                {% endif %}
+                                
+                                {% if donor.total_donations %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i class="fas fa-award mr-1"></i>{{ donor.total_donations }} donation{{ donor.total_donations|pluralize }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <a href="{% url 'users:profile_detail' donor.pk %}" 
+                                   class="bg-red-600 text-white py-1 px-3 rounded-md hover:bg-red-700 transition duration-200 text-sm">
+                                    <i class="fas fa-user mr-1"></i>Profile
+                                </a>
+                                
+                                {% if donor.can_donate and request.user.is_authenticated %}
+                                <button @click="openContactModal({{ donor.pk }}, '{{ donor.get_full_name }}', '{{ donor.phone_number }}', '{{ donor.email }}')" 
+                                        class="bg-green-600 text-white py-1 px-3 rounded-md hover:bg-green-700 transition duration-200 text-sm">
+                                    <i class="fas fa-phone mr-1"></i>Contact
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="mt-8 flex justify-center">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-red-50 text-sm font-medium text-red-600">
+                            {{ num }}
+                        </span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <div class="mx-auto h-24 w-24 text-gray-400">
+                <i class="fas fa-search text-6xl"></i>
+            </div>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">No donors found</h3>
+            <p class="mt-2 text-sm text-gray-500">
+                {% if request.GET.blood_group or request.GET.location or request.GET.availability %}
+                    Try adjusting your search criteria or clearing filters.
+                {% else %}
+                    There are currently no registered donors in the system.
+                {% endif %}
+            </p>
+            {% if request.GET.blood_group or request.GET.location or request.GET.availability %}
+            <div class="mt-6">
+                <a href="{% url 'users:find_donors' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                    Clear All Filters
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contact Donor Modal -->
+    <div x-show="showContactModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+            
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <i class="fas fa-phone text-green-600"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" x-text="'Contact ' + selectedDonor.name"></h3>
+                            <div class="mt-4 space-y-3">
+                                <!-- Phone Call -->
+                                <button @click="callDonor()" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-phone mr-2"></i>
+                                    Call <span x-text="selectedDonor.phone || 'N/A'"></span>
+                                </button>
+                                
+                                <!-- SMS -->
+                                <button @click="sendSMS()" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <i class="fas fa-sms mr-2"></i>
+                                    Send SMS
+                                </button>
+                                
+                                <!-- Email -->
+                                <button @click="sendEmail()" class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                    <i class="fas fa-envelope mr-2"></i>
+                                    Send Email
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button @click="closeContactModal()" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function donorSearch() {
+    return {
+        viewMode: 'grid',
+        showAdvancedFilters: false,
+        showContactModal: false,
+        autoRefresh: false,
+        sortBy: 'name',
+        selectedDonor: {
+            id: null,
+            name: '',
+            phone: '',
+            email: ''
+        },
+        
+        init() {
+            // Auto-refresh functionality
+            this.$watch('autoRefresh', (value) => {
+                if (value) {
+                    this.startAutoRefresh();
+                } else {
+                    this.stopAutoRefresh();
+                }
+            });
+        },
+        
+        startAutoRefresh() {
+            this.refreshInterval = setInterval(() => {
+                window.location.reload();
+            }, 30000); // 30 seconds
+        },
+        
+        stopAutoRefresh() {
+            if (this.refreshInterval) {
+                clearInterval(this.refreshInterval);
+            }
+        },
+        
+        openContactModal(donorId, donorName, donorPhone, donorEmail) {
+            this.selectedDonor = {
+                id: donorId,
+                name: donorName,
+                phone: donorPhone,
+                email: donorEmail
+            };
+            this.showContactModal = true;
+        },
+        
+        closeContactModal() {
+            this.showContactModal = false;
+            this.selectedDonor = {
+                id: null,
+                name: '',
+                phone: '',
+                email: ''
+            };
+        },
+        
+        callDonor() {
+            if (this.selectedDonor.phone) {
+                window.location.href = `tel:${this.selectedDonor.phone}`;
+            } else {
+                alert('Phone number not available for this donor.');
+            }
+        },
+        
+        sendSMS() {
+            if (this.selectedDonor.phone) {
+                const message = encodeURIComponent(`Hi ${this.selectedDonor.name}, I found your contact through LifeLine blood donation platform. I need blood donation assistance. Could you please help?`);
+                window.location.href = `sms:${this.selectedDonor.phone}?body=${message}`;
+            } else {
+                alert('Phone number not available for this donor.');
+            }
+        },
+        
+        sendEmail() {
+            if (this.selectedDonor.email) {
+                const subject = encodeURIComponent('Blood Donation Request - LifeLine');
+                const body = encodeURIComponent(`Dear ${this.selectedDonor.name},\n\nI hope this email finds you well. I found your contact through the LifeLine blood donation platform.\n\nI am reaching out because I am in need of blood donation assistance. Would you be available to help?\n\nThank you for your time and consideration.\n\nBest regards`);
+                window.location.href = `mailto:${this.selectedDonor.email}?subject=${subject}&body=${body}`;
+            } else {
+                alert('Email address not available for this donor.');
+            }
+        }
+    }
+}
+</script>
+{% endblock %}
