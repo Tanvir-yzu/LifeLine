@@ -1,0 +1,45 @@
+{% if user_requests %}
+    <div class="space-y-4">
+        {% for request in user_requests %}
+        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow duration-300 bg-white">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <span class="text-lg font-bold text-red-600 mr-3">{{ request.blood_group_needed }}</span>
+                        <h3 class="font-medium text-gray-900">Request for {{ request.hospital_name }}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">{{ request.hospital_address }}</p>
+                    <p class="text-sm text-gray-500 mt-1">Needed by: {{ request.needed_by_date|date:"M d, Y" }}</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="px-3 py-1 text-xs font-semibold rounded-full 
+                        {% if request.status == 'FULFILLED' %}bg-green-100 text-green-800
+                        {% elif request.status == 'ACTIVE' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ request.get_status_display }}
+                    </span>
+                    <a href="{% url 'users:blood_request_detail' request.pk %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View
+                    </a>
+                    <a href="{% url 'users:blood_request_edit' request.pk %}" class="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                        Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-12">
+        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No Blood Requests Yet</h3>
+        <p class="mt-2 text-sm text-gray-500">Ready to make a difference? Create your first blood request now.</p>
+        <div class="mt-6">
+            <a href="{% url 'users:blood_request_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                + Create New Request
+            </a>
+        </div>
+    </div>
+{% endif %}

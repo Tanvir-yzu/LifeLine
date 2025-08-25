@@ -50,6 +50,7 @@ urlpatterns = [
     path('blood-requests/<int:pk>/edit/', views.BloodRequestUpdateView.as_view(), name='blood_request_edit'),
     path('blood-requests/<int:pk>/delete/', views.BloodRequestDeleteView.as_view(), name='blood_request_delete'),
     path('blood-requests/<int:pk>/respond/', views.BloodRequestResponseCreateView.as_view(), name='blood_request_respond'),
+    path('blood-request-responses/', views.BloodRequestResponseListView.as_view(), name='blood_request_response_list'),
     
     # User's Blood Requests and Responses
     path('my-requests/', views.MyBloodRequestsView.as_view(), name='my_blood_requests'),

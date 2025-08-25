@@ -405,14 +405,14 @@ function shareOnFacebook() {
 
 function shareOnTwitter() {
     const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(`🩸 URGENT: Blood needed for {{ blood_request.patient_name }}\n🏥 Hospital: {{ blood_request.hospital_name }}\n🅰️ Blood Group: {{ blood_request.blood_group_needed }}\n📅 Needed by: {{ blood_request.needed_by_date|date:"M d, Y" }}\n\nHelp save a life! #BloodDonation #SaveLives`);
+    const text = encodeURIComponent(`🩸 URGENT: Blood needed for {{ blood_request.patient_name }}\\n🏥 Hospital: {{ blood_request.hospital_name }}\\n🅰️ Blood Group: {{ blood_request.blood_group_needed }}\\n📅 Needed by: {{ blood_request.needed_by_date|date:"M d, Y" }}\\n\\nHelp save a life! #BloodDonation #SaveLives`);
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=600,height=400');
 }
 
 function shareOnWhatsApp() {
     const currentUrl = window.location.href;
     const url = encodeURIComponent(currentUrl);
-    const text = encodeURIComponent(`🩸 *URGENT BLOOD REQUEST* 🩸\n\n👤 Patient: {{ blood_request.patient_name }}\n🏥 Hospital: {{ blood_request.hospital_name }}\n🅰️ Blood Group Needed: {{ blood_request.blood_group_needed }}\n📊 Units: {{ blood_request.units_needed }}\n📅 Needed by: {{ blood_request.needed_by_date|date:"F d, Y g:i A" }}\n⚡ Urgency: {{ blood_request.get_urgency_display }}\n\nPlease help save a life by donating blood or sharing this message!\n\n${url}`);
+    const text = encodeURIComponent(`🩸 *URGENT BLOOD REQUEST* 🩸\\n\\n👤 Patient: {{ blood_request.patient_name }}\\n🏥 Hospital: {{ blood_request.hospital_name }}\\n🅰️ Blood Group Needed: {{ blood_request.blood_group_needed }}\\n📊 Units: {{ blood_request.units_needed }}\\n📅 Needed by: {{ blood_request.needed_by_date|date:"F d, Y g:i A" }}\\n⚡ Urgency: {{ blood_request.get_urgency_display }}\\n\\nPlease help save a life by donating blood or sharing this message!\\n\\n${url}`);
     window.open(`https://wa.me/?text=${text}`, '_blank');
 }
 

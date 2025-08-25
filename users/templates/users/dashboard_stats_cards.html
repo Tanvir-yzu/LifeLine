@@ -1,0 +1,61 @@
+{% load humanize %}
+
+<!-- My Total Requests -->
+<div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+    <div class="flex items-center">
+        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">My Requests</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ total_requests|default:0|intcomma }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- My Total Donations -->
+<div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+    <div class="flex items-center">
+        <div class="p-3 rounded-full bg-green-100 text-green-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">My Donations</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ total_responses|default:0|intcomma }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Fulfilled Requests -->
+<div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+    <div class="flex items-center">
+        <div class="p-3 rounded-full bg-teal-100 text-teal-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Fulfilled Requests</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ fulfilled_requests|default:0|intcomma }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Requests -->
+<div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+    <div class="flex items-center">
+        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Pending Requests</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ pending_requests|default:0|intcomma }}</p>
+        </div>
+    </div>
+</div>

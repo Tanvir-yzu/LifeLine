@@ -1,0 +1,47 @@
+{% if user_responses %}
+    <div class="space-y-4">
+        {% for response in user_responses %}
+        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow duration-300 bg-white">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <span class="text-lg font-bold text-red-600 mr-3">{{ response.blood_request.blood_group_needed }}</span>
+                        <h3 class="font-medium text-gray-900">Donation for {{ response.blood_request.requester.first_name|default:response.blood_request.requester.username }}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">
+                        At: <span class="font-medium">{{ response.blood_request.hospital_name }}</span>
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Donated on: {{ response.responded_at|date:"M d, Y" }}
+                    </p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="px-3 py-1 text-xs font-semibold rounded-full 
+                        {% if response.response == 'COMPLETED' %}bg-green-100 text-green-800
+                        {% elif response.response == 'ACCEPTED' %}bg-blue-100 text-blue-800
+                        {% elif response.response == 'DECLINED' %}bg-red-100 text-red-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ response.get_response_display }}
+                    </span>
+                    <a href="{% url 'users:blood_request_detail' response.blood_request.pk %}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                        View Request
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-12">
+        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No Donations Yet</h3>
+        <p class="mt-2 text-sm text-gray-500">You haven't responded to any blood requests. Be a hero today!</p>
+        <div class="mt-6">
+            <a href="{% url 'users:blood_request_list' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                Browse Available Requests
+            </a>
+        </div>
+    </div>
+{% endif %}

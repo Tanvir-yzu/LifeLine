@@ -423,6 +423,63 @@ class BloodRequestResponseCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['blood_request'] = self.blood_request
         return context
+    
+
+class BloodRequestResponseListView(ListView):
+    """List all blood request responses"""
+    model = BloodRequestResponse
+    template_name = 'blood/bloodrequestresponse_list.html'
+    context_object_name = 'responses'
+    paginate_by = 12
+
+    def get_queryset(self):
+        queryset = BloodRequestResponse.objects.select_related(
+            'blood_request', 'donor'
+        ).order_by('-responded_at')
+
+        # Filtering
+        blood_group = self.request.GET.get('blood_group')
+        if blood_group:
+            queryset = queryset.filter(blood_request__blood_group_needed=blood_group)
+
+        urgency = self.request.GET.get('urgency')
+        if urgency:
+            queryset = queryset.filter(blood_request__urgency=urgency)
+
+        response_status = self.request.GET.get('response')
+        if response_status:
+            queryset = queryset.filter(response=response_status)
+
+        # Searching
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(donor__full_name__icontains=search_query) |
+                Q(blood_request__patient_name__icontains=search_query) |
+                Q(blood_request__hospital_name__icontains=search_query)
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['blood_groups'] = User.BLOOD_GROUP_CHOICES
+        context['urgency_levels'] = BloodRequest.URGENCY_CHOICES
+        context['response_statuses'] = BloodRequestResponse.RESPONSE_CHOICES
+        context['current_filters'] = {
+            'blood_group': self.request.GET.get('blood_group', ''),
+            'urgency': self.request.GET.get('urgency', ''),
+            'response': self.request.GET.get('response', ''),
+            'search': self.request.GET.get('search', ''),
+        }
+
+        # Statistics
+        context['total_responses'] = BloodRequestResponse.objects.count()
+        context['accepted_responses'] = BloodRequestResponse.objects.filter(response='ACCEPTED').count()
+        context['completed_responses'] = BloodRequestResponse.objects.filter(response='COMPLETED').count()
+        context['declined_responses'] = BloodRequestResponse.objects.filter(response='DECLINED').count()
+
+        return context
 
 
 class MyBloodRequestsView(LoginRequiredMixin, ListView):

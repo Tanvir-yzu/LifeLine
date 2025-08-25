@@ -1,0 +1,38 @@
+{% if available_blood_requests %}
+    <div class="space-y-4">
+        {% for request in available_blood_requests %}
+        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow duration-300 bg-white">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <span class="text-lg font-bold text-red-600 mr-3">{{ request.blood_type }}</span>
+                        <h3 class="font-medium text-gray-900">Blood Needed at {{ request.hospital_name }}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">{{ request.location }}</p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Posted by: {{ request.user.first_name|default:request.user.username }}
+                        <span class="mx-2">|</span>
+                        Needed by: {{ request.needed_date|date:"M d, Y" }}
+                    </p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="px-3 py-1 text-xs font-semibold rounded-full {% if request.is_urgent %}bg-red-100 text-red-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {% if request.is_urgent %}Urgent{% else %}Normal{% endif %}
+                    </span>
+                    <a href="{% url 'users:blood_request_detail' request.pk %}" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                        View & Help
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-12">
+        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+        </svg>
+        <h3 class="mt-4 text-lg font-medium text-gray-900">No Available Requests</h3>
+        <p class="mt-2 text-sm text-gray-500">There are currently no open blood requests. Check back later!</p>
+    </div>
+{% endif %}
