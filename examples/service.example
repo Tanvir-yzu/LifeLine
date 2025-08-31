@@ -1,13 +1,13 @@
 [Unit]
-Description=Excel_tech-uWSGI-instance
+Description=uWSGI instance to serve LifeLine
 After=network.target postgresql-14.service
 
 [Service]
 User=root
 Group=nginx
-WorkingDirectory=/opt/Excel_tech
-Environment="PATH=/opt/Excel_tech/venv/bin"
-ExecStart=/opt/Excel_tech/venv/bin/uwsgi --ini /opt/Excel_tech/uwsgi/uwsgi.ini
+WorkingDirectory=/opt/LifeLine
+Environment="PATH=/opt/LifeLine/venv/bin"
+ExecStart=/opt/LifeLine/venv/bin/uwsgi --ini /opt/LifeLine/uwsgi/uwsgi.ini
 Restart=always
 KillSignal=SIGQUIT
 Type=notify
